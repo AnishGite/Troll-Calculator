@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Advanced Troll Calculator with Snake Game</title>
+    <style>
+        :root {
+            --bg-dark: #1a1a2e;
+            --bg-medium: #16213e;
+            --accent-color: #0f3460;
+            --text-color: #e94560;
+            --highlight-color: #0fff95;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: var(--bg-dark);
+            color: var(--text-color);
+        }
+        .calculator {
+            background-color: var(--bg-medium);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+            width: 500px;
+            text-align: center;
+            border: 2px solid var(--accent-color);
+        }
+        h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--accent-color);
+            color: var(--text-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 12px 20px;
+            margin: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #1a3a5e;
+        }
+        #result, #history, #stats {
+            background-color: var(--bg-dark);
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 8px;
+            min-height: 50px;
+        }
+        #history, #stats {
+            max-height: 150px;
+            overflow-y: auto;
+            text-align: left;
+        }
+        .advanced-options {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .theme-toggle {
+            margin-top: 10px;
+        }
+        .extra-funky {
+            background-color: var(--highlight-color) !important;
+            color: var(--bg-dark) !important;
+        }
+        #snake-game {
+            display: none;
+            background-color: var(--bg-dark);
+            width: 400px;
+            height: 400px;
+            margin: 20px auto;
+            border: 2px solid var(--accent-color);
+        }
+        #snake-canvas {
+            width: 100%;
+            height: 100%;
+        }
+        .flash-red {
+            animation: flashRed 0.5s infinite alternate;
+        }
+        @keyframes flashRed {
+            from { background-color: #ff4444; }
+            to { background-color: var(--accent-color); }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <h2>🧌 Advanced Troll Calculator 🧌</h2>
+        <div class="advanced-options">
+            <input type="number" id="num1" placeholder="Enter first number">
+            <select id="operation">
+                <option value="add">Add</option>
+                <option value="subtract">Subtract</option>
+                <option value="multiply">Multiply</option>
+                <option value="divide">Divide</option>
+                <option value="power">Power</option>
+                <option value="modulo">Modulo</option>
+                <option value="root">Root</option>
+            </select>
+            <input type="number" id="num2" placeholder="Enter second number">
+        </div>
+        <div>
+            <button onclick="trollCalculate()">Calculate</button>
+            <button onclick="clearHistory()">Clear History</button>
+            <button onclick="toggleFunkyMode()">Funky Mode 🕺</button>
+            <button id="snake-button" onclick="showSnakeGame()">Do not click</button>
+        </div>
+        <div class="theme-toggle">
+            <label>
+                <input type="checkbox" id="scientificMode"> Scientific Mode
+            </label>
+        </div>
+        <div id="result">Results will appear here...</div>
+        <div id="history">Calculation History:</div>
+        <div id="stats">Calculation Statistics:</div>
+        
+        <div id="snake-game">
+            <canvas id="snake-canvas"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Add event listener to start flashing when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            const snakeButton = document.getElementById('snake-button');
+            snakeButton.classList.add('flash-red');
+        });
+
+        let calculationStats = {
+            totalCalculations: 0,
+            successfulCalculations: 0,
+            trolledCalculations: 0,
+            operations: {}
+        };
+
+        let funkyMode = false;
+
+        function trollCalculate() {
+            const num1Input = document.getElementById('num1');
+            const num2Input = document.getElementById('num2');
+            
+            if (num1Input.value === '' || num2Input.value === '') {
+                alert('Please enter numbers in both fields!');
+                return;
+            }
+
+            const num1 = parseFloat(num1Input.value);
+            const num2 = parseFloat(num2Input.value);
+            const operation = document.getElementById('operation').value;
+            const resultDiv = document.getElementById('result');
+            const historyDiv = document.getElementById('history');
+            const statsDiv = document.getElementById('stats');
+            const scientificMode = document.getElementById('scientificMode').checked;
+            
+            const trollResponses = [
+                "Nope, not doing that calculation! 😝",
+                "Math is for losers! 🤪",
+                "Error 404: Calculation not found 🙃",
+                "Are you seriously asking me to do math? 😂",
+                "Nice try, but I'm not in the mood 🤨",
+                "Calculation? More like TROLL-culation! 🤡"
+            ];
+
+            const actualCalculations = {
+                'add': num1 + num2,
+                'subtract': num1 - num2,
+                'multiply': num1 * num2,
+                'divide': num2 !== 0 ? num1 / num2 : "Cannot divide by zero!",
+                'power': Math.pow(num1, num2),
+                'modulo': num1 % num2,
+                'root': scientificMode ? Math.pow(num1, 1/num2) : "Enable Scientific Mode"
+            };
+
+            calculationStats.totalCalculations++;
+            if (!calculationStats.operations[operation]) {
+                calculationStats.operations[operation] = 0;
+            }
+            calculationStats.operations[operation]++;
+
+            let result;
+            if (Math.random() < 0.5) {
+                result = trollResponses[Math.floor(Math.random() * trollResponses.length)];
+                resultDiv.style.color = '#ff4444';
+                calculationStats.trolledCalculations++;
+            } else {
+                result = `Result: ${actualCalculations[operation]}`;
+                resultDiv.style.color = funkyMode ? 'var(--highlight-color)' : 'var(--text-color)';
+                calculationStats.successfulCalculations++;
+            }
+
+            resultDiv.textContent = result;
+
+            const historyEntry = document.createElement('div');
+            historyEntry.textContent = `${num1} ${operation} ${num2} = ${result}`;
+            historyDiv.appendChild(historyEntry);
+
+            updateStats(statsDiv);
+        }
+
+        function updateStats(statsDiv) {
+            statsDiv.innerHTML = `
+                Total Calculations: ${calculationStats.totalCalculations}<br>
+                Successful Calculations: ${calculationStats.successfulCalculations}<br>
+                Trolled Calculations: ${calculationStats.trolledCalculations}<br>
+                Operation Breakdown:<br>
+                ${Object.entries(calculationStats.operations)
+                    .map(([op, count]) => `${op}: ${count}`)
+                    .join('<br>')}
+            `;
+        }
+
+        function clearHistory() {
+            document.getElementById('history').innerHTML = 'Calculation History:';
+            document.getElementById('stats').innerHTML = 'Calculation Statistics:';
+            calculationStats = {
+                totalCalculations: 0,
+                successfulCalculations: 0,
+                trolledCalculations: 0,
+                operations: {}
+            };
+        }
+
+        function toggleFunkyMode() {
+            const calculator = document.querySelector('.calculator');
+            funkyMode = !funkyMode;
+            calculator.classList.toggle('extra-funky');
+        }
+
+        // Snake Game Logic
+        function showSnakeGame() {
+            const snakeGame = document.getElementById('snake-game');
+            snakeGame.style.display = 'block';
+            initSnakeGame();
+        }
+
+        function initSnakeGame() {
+            const canvas = document.getElementById('snake-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = 400;
+            canvas.height = 400;
+
+            const gridSize = 20;
+            const tileCount = canvas.width / gridSize;
+
+            let snake = [{x: 10, y: 10}];
+            let food = getRandomFood();
+            let dx = 1;
+            let dy = 0;
+            let score = 0;
+
+            function drawGame() {
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = 'green';
+                snake.forEach(segment => {
+                    ctx.fillRect(
+                        segment.x * gridSize, 
+                        segment.y * gridSize, 
+                        gridSize - 2, 
+                        gridSize - 2
+                    );
+                });
+
+                ctx.fillStyle = 'red';
+                ctx.fillRect(
+                    food.x * gridSize, 
+                    food.y * gridSize, 
+                    gridSize - 2, 
+                    gridSize - 2
+                );
+            }
+
+            function moveSnake() {
+                const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+                snake.unshift(head);
+
+                if (head.x === food.x && head.y === food.y) {
+                    score++;
+                    food = getRandomFood();
+                } else {
+                    snake.pop();
+                }
+            }
+
+            function getRandomFood() {
+                return {
+                    x: Math.floor(Math.random() * tileCount),
+                    y: Math.floor(Math.random() * tileCount)
+                };
+            }
+
+            function gameLoop() {
+                moveSnake();
+                drawGame();
+
+                // Game over conditions
+                if (
+                    snake[0].x < 0 || snake[0].x >= tileCount ||
+                    snake[0].y < 0 || snake[0].y >= tileCount ||
+                    snake.slice(1).some(seg => 
+                        seg.x === snake[0].x && seg.y === snake[0].y)
+                ) {
+                    alert(`Game Over! Your score: ${score}`);
+                    snake = [{x: 10, y: 10}];
+                    score = 0;
+                    dx = 1;
+                    dy = 0;
+                }
+            }
+
+            document.addEventListener('keydown', (e) => {
+                switch(e.key) {
+                    case 'ArrowUp': if (dy !== 1) { dx = 0; dy = -1; } break;
+                    case 'ArrowDown': if (dy !== -1) { dx = 0; dy = 1; } break;
+                    case 'ArrowLeft': if (dx !== 1) { dx = -1; dy = 0; } break;
+                    case 'ArrowRight': if (dx !== -1) { dx = 1; dy = 0; } break;
+                }
+            });
+
+            setInterval(gameLoop, 100);
+        }
+    </script>
+</body>
+</html>
