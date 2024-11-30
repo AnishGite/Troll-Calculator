@@ -31,3 +31,7 @@ Game Features-
 1. Score is tracked
 
 2. Game resets itself after you lose
+
+Disclaimer-
+
+The entire code is written by me and I have taken inspiration from Discord and other websites but I also took help of ai in some part of the code.
